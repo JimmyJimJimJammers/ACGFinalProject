@@ -414,7 +414,7 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
         printf("Num disp triangles after: %d \n", mesh->numDispTriangles());
         //radiosity->Reset();
         //radiosity->setupVBOs();
-        
+        printf("_____________________________________________\n");
         break;
     }
     
@@ -438,6 +438,8 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       //radiosity->getMesh()->Subdivision();
       //radiosity->Reset();
       //radiosity->setupVBOs();
+            mesh->Subdivision();
+            mesh->ConvertSubdividedQuadsToTris();
       break;
     case 'c': case 'C':
       // clear the raytracing visualization

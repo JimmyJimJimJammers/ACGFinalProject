@@ -7,6 +7,7 @@
 #include "hash.h"
 #include "material.h"
 #include "triangle.h"
+#include <map>
 
 class Vertex;
 class Edge;
@@ -161,8 +162,8 @@ public:
     Triangle* getOppositeTriangle(Triangle* currentTri, Vertex* a, Vertex* b);
     void DisplacementSubdivisionTriangles();
     Triangle* makeSubTriangle(Vertex *center, Vertex *a, Vertex* b, Triangle* mate, Triangle* tri);
-    void splitR3(Triangle* tri);
-    void swap(Edge* sharedEdge);
+    bool splitR3(Triangle* tri);
+    bool swap(Edge* sharedEdge);
     int numDispTriangles()
     {
         //if (disp_subdivided_tris.size() > 0)
@@ -174,6 +175,8 @@ public:
             return subdivided_tris.size();
         //}
     }
+    Edge* findMateEdge(Triangle* t1, Triangle* t2);
+    void ConvertSubdividedQuadsToTris();
 
 private:
 
@@ -197,6 +200,82 @@ private:
     void SubdivisionAltered();
     void TriangleSimplification(int target_tri_count);
     void SubdivisionAlteredTriangles();
+    
+    void addNeighbors(Triangle* tri)
+    {
+        Edge* e = tri->getEdge();
+        int neighbors = 0;
+        for (int i = 0; i < 3 ; i++)
+        {
+            if (e->getOpposite() != NULL)
+            {
+                neighbors++;
+            }
+            e = e->getNext();
+        }
+        numNeighbors[neighbors]++;
+    }
+    void addAllNeighbors()
+    {
+        clearNeighbors();
+        for (int i = 0; i < subdivided_tris.size(); i++)
+        {
+            addNeighbors(subdivided_tris[i]);
+        }
+    }
+    void printNeighbors()
+    {
+        printf("Number of occupied neighbors for triangles:\n");
+        for (std::map<int, int>::iterator it = numNeighbors.begin(); it != numNeighbors.end(); it++)
+        {
+            printf("\t%d neighbors: %d\n", it->first, it->second);
+        }
+    }
+    void clearNeighbors()
+    {
+        numNeighbors.clear();
+    }
+    
+    void clearTriangles(std::vector<Triangle*> *tris)
+    {
+        std::map<int, Vertex*> vertsToDelete;
+        for (int i = 0; i < tris->size(); i++)
+        {
+            //printf("HEA1\n");
+            //delete vertices
+            for (int j = 0; j < 3; j++)
+            {
+                //printf("HEA1.%d\n", j);
+                if ((*(*tris)[i])[j] != NULL)
+                {
+                    //printf("HEA1.%d%d\n", j, j);
+                    vertsToDelete[(*(*tris)[i])[j]->getIndex()] = (*(*tris)[i])[j];
+                    //delete (*(*tris)[i])[j];
+                    //(*(*tris)[i])[j] = NULL;
+                }
+            }
+            
+            //printf("HEA2\n");
+            //remove edges
+            removeTriEdges((*tris)[i]);
+            
+            //printf("HEA3\n");
+            //delete triangle
+            delete (*tris)[i];
+            
+            //printf("HEA4\n");
+            //remove from list
+            tris->erase(tris->begin() + i);
+            
+            //decrement list
+            i--;
+        }
+        for (std::map<int, Vertex*>::iterator it = vertsToDelete.begin(); it!=vertsToDelete.end(); it++)
+        {
+            delete it->second;
+        }
+        assert(tris->size() == 0);
+    }
 
   // ==============
   // REPRESENTATION
@@ -244,6 +323,9 @@ private:
     std::vector<VBOPosNormalColor> mesh_tri_verts;
     std::vector<VBOIndexedTri> mesh_tri_indices;
     std::vector<VBOIndexedTri> mesh_textured_tri_indices;
+    
+    //for tracking neighbors, I'm getting errors involving edges not seeing their opposites
+    std::map<int, int> numNeighbors;
     
     
     

@@ -8,6 +8,8 @@ Edge::Edge(Vertex *vs, Vertex *ve, Face *f) {
   face = f;
   next = NULL;
     triangle = NULL;
+    triangleEdge = NULL;
+    triangleEdgeSubdiv = NULL;
   opposite = NULL;
 }
 Edge::Edge(Vertex *vs, Vertex *ve, Triangle *t) {
@@ -16,6 +18,8 @@ Edge::Edge(Vertex *vs, Vertex *ve, Triangle *t) {
     triangle = t;
     face = NULL;
     next = NULL;
+    triangleEdge = NULL;
+    triangleEdgeSubdiv = NULL;
     opposite = NULL;
     //crease = 0;
 }

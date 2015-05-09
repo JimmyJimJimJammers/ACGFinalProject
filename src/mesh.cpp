@@ -22,6 +22,7 @@
 
 #include <cfloat>
 #include <map>
+#include <climits>
 
 
 // =======================================================================
@@ -174,6 +175,9 @@ Triangle* Mesh::addTri(Vertex *a, Vertex *b, Vertex *c, Material *material, enum
     if (ea_op != edges.end()) { ea_op->second->setOpposite(ea); }
     if (eb_op != edges.end()) { eb_op->second->setOpposite(eb); }
     if (ec_op != edges.end()) { ec_op->second->setOpposite(ec); }
+    
+    //printf("EA: %p EB: %p EC: %p\n", ea->getOpposite(), eb->getOpposite(), ec->getOpposite());
+    
     // add the triangle to the appropriate master list
     if (tri_type == TRI_TYPE_ORIGINAL)
     {
@@ -191,6 +195,14 @@ Triangle* Mesh::addTri(Vertex *a, Vertex *b, Vertex *c, Material *material, enum
     
     assert (triangles.find(t->getID()) == triangles.end());
     triangles[t->getID()] = t;
+    
+    assert(t->getEdge() != NULL);
+    assert((*t)[0] != NULL);
+    assert((*t)[1] != NULL);
+    assert((*t)[2] != NULL);
+    
+    
+    //printf("\tEA: %p EB: %p EC: %p\n", ea->getOpposite(), eb->getOpposite(), ec->getOpposite());
     
     return t;
     
@@ -228,6 +240,7 @@ void Mesh::removeFaceEdges(Face *f) {
 
 void Mesh::removeTriEdges(Triangle *t)
 {
+    
     // helper function for face deletion
     Edge *ea = t->getEdge();
     Edge *eb = ea->getNext();
@@ -366,7 +379,7 @@ void Mesh::Load(ArgParser *_args) {
             
             objfile >> token;
             
-            //////printf("\n\nToken: %s\n", token.c_str());
+            ////////printf("\n\nToken: %s\n", token.c_str());
             if (token == "displace_file")
             {
                 objfile >> displace_file;
@@ -381,7 +394,7 @@ void Mesh::Load(ArgParser *_args) {
                 objfile >> token;
             }
             
-            //////printf("DisplaceFile: %s\n", displace_file.c_str());
+            ////////printf("DisplaceFile: %s\n", displace_file.c_str());
             
             if (token == "diffuse")
             {
@@ -427,10 +440,10 @@ void Mesh::Load(ArgParser *_args) {
         glm::vec3 up = glm::vec3(0,1,0);
         camera = new PerspectiveCamera(camera_position, point_of_interest, up, 20 * M_PI/180.0);
     }
-    //printf("Finished camera initialization\n");
+    ////printf("Finished camera initialization\n");
     //for subdivision using tris
     ConvertOriginalQuadsToTris();
-    //printf("Finished converting mesh to tris\n");
+    ////printf("Finished converting mesh to tris\n");
 }
 
 // =================================================================
@@ -470,6 +483,7 @@ void Mesh::Subdivision()
     
     //get all of the subdivided faces
     std::vector<Face*> tmp = subdivided_quads;
+    
     //delete the old list of them
     subdivided_quads.clear();
     
@@ -520,6 +534,18 @@ void Mesh::Subdivision()
         assert (getEdge(cd,d) != NULL);
         assert (getEdge(d,da) != NULL);
         assert (getEdge(da,a) != NULL);
+        
+        assert (getEdge(ab,mid) != NULL);
+        assert (getEdge(mid,ab) != NULL);
+        
+        assert (getEdge(bc,mid) != NULL);
+        assert (getEdge(mid,bc) != NULL);
+        
+        assert (getEdge(cd,mid) != NULL);
+        assert (getEdge(mid,cd) != NULL);
+        
+        assert (getEdge(da,mid) != NULL);
+        assert (getEdge(mid,da) != NULL);
     }
 }
 
@@ -562,7 +588,7 @@ Mesh::newVertReturn Mesh::AddEdgeVertexDisp(Vertex *a, Vertex *b, Material *m)
         //the actual displacement value at the new point
         float tempDisp = glm::length(m->getDisplacementValue(tempS, tempT)); //compare the difference between the interpolated displacement and the actual dispacement
         
-        ////printf("\t(tempDisp[%f] - currDisp[%f]) = %f\n", tempDisp, currDisp, (tempDisp - currDisp));
+        //////printf("\t(tempDisp[%f] - currDisp[%f]) = %f\n", tempDisp, currDisp, (tempDisp - currDisp));
         
         if (std::fabs(tempDisp - currDisp) > maxHeight)
         {
@@ -573,7 +599,7 @@ Mesh::newVertReturn Mesh::AddEdgeVertexDisp(Vertex *a, Vertex *b, Material *m)
         }
         
     }
-    ////printf("MaxHeight: %f\n", maxHeight);
+    //////printf("MaxHeight: %f\n", maxHeight);
     
     v = addVertex(pos);
     v->setTextureCoordinates(s,t);
@@ -583,7 +609,7 @@ Mesh::newVertReturn Mesh::AddEdgeVertexDisp(Vertex *a, Vertex *b, Material *m)
     
     if (std::fabs(maxHeight) < epsilon)
     {
-        //printf("EdgeVert: Negligible height difference, no vert should be created.\n");
+        ////printf("EdgeVert: Negligible height difference, no vert should be created.\n");
         returnValue.significant = false;
     }
     else
@@ -620,7 +646,7 @@ Mesh::newVertReturn Mesh::AddMidVertexDisp(Vertex *a, Vertex *b, Vertex *c, Vert
         //the actual displacement value at the new point
         float tempDisp = glm::length(m->getDisplacementValue(tempS, tempT)); //compare the difference between the interpolated displacement and the actual dispacement
         
-        ////printf("\t(tempDisp[%f] - currDisp[%f]) = %f\n", tempDisp, currDisp, (tempDisp - currDisp));
+        //////printf("\t(tempDisp[%f] - currDisp[%f]) = %f\n", tempDisp, currDisp, (tempDisp - currDisp));
         
         if (std::fabs(tempDisp - currDisp) > maxHeight)
         {
@@ -645,7 +671,7 @@ Mesh::newVertReturn Mesh::AddMidVertexDisp(Vertex *a, Vertex *b, Vertex *c, Vert
         //the actual displacement value at the new point
         float tempDisp = glm::length(m->getDisplacementValue(tempS, tempT)); //compare the difference between the interpolated displacement and the actual dispacement
         
-        ////printf("\t(tempDisp[%f] - currDisp[%f]) = %f\n", tempDisp, currDisp, (tempDisp - currDisp));
+        //////printf("\t(tempDisp[%f] - currDisp[%f]) = %f\n", tempDisp, currDisp, (tempDisp - currDisp));
         
         if (std::fabs(tempDisp - currDisp) > maxHeight)
         {
@@ -657,7 +683,7 @@ Mesh::newVertReturn Mesh::AddMidVertexDisp(Vertex *a, Vertex *b, Vertex *c, Vert
         
     }
     
-    ////printf("MaxHeight: %f\n", maxHeight);
+    //////printf("MaxHeight: %f\n", maxHeight);
     
     Vertex *v = addVertex(pos);
     v->setTextureCoordinates(s,t);
@@ -666,7 +692,7 @@ Mesh::newVertReturn Mesh::AddMidVertexDisp(Vertex *a, Vertex *b, Vertex *c, Vert
     
     if (std::fabs(maxHeight) < epsilon)
     {
-        //printf("EdgeVert: Negligible height difference, no vert should be created.\n");
+        ////printf("EdgeVert: Negligible height difference, no vert should be created.\n");
         returnValue.significant = false;
     }
     else
@@ -694,7 +720,7 @@ void Mesh::SubdivisionAltered()
     //for all subdivided faces
     for (unsigned int i = 0; i < tmp.size(); i++)
     {
-        ////printf("Face: %d\n", i);
+        //////printf("Face: %d\n", i);
         //make a temp face
         Face *f = tmp[i];
         
@@ -710,7 +736,7 @@ void Mesh::SubdivisionAltered()
         
         Vertex *d = (*f)[3];
         d->setTextureCoordinates((*f)[3]->get_s(), (*f)[3]->get_t());
-        ////printf("A_ST: (%f %f) B_ST: (%f %f) C_ST: (%f %f) D_ST: (%f %f)", a->get_s(), a->get_t(), b->get_s(), b->get_t(), c->get_s(), c->get_t(), d->get_s(), d->get_t());
+        //////printf("A_ST: (%f %f) B_ST: (%f %f) C_ST: (%f %f) D_ST: (%f %f)", a->get_s(), a->get_t(), b->get_s(), b->get_t(), c->get_s(), c->get_t(), d->get_s(), d->get_t());
         
         // add new vertices on the edges
         //Vertex *ab = AddEdgeVertexDisp(a,b, f->getMaterial());
@@ -733,7 +759,7 @@ void Mesh::SubdivisionAltered()
         // add new point in the middle of the patch
         Vertex *mid = midTemp.newVert;// = new Vertex();
         
-        ////printf("AB_ST: (%f %f) BC_ST: (%f %f) CD_ST: (%f %f) DA_ST: (%f %f)", ab->get_s(), ab->get_t(), bc->get_s(), bc->get_t(), cd->get_s(), cd->get_t(), da->get_s(), da->get_t());
+        //////printf("AB_ST: (%f %f) BC_ST: (%f %f) CD_ST: (%f %f) DA_ST: (%f %f)", ab->get_s(), ab->get_t(), bc->get_s(), bc->get_t(), cd->get_s(), cd->get_t(), da->get_s(), da->get_t());
         
         //make sure all the old edges are not null
         assert (getEdge(a,b) != NULL);
@@ -748,7 +774,7 @@ void Mesh::SubdivisionAltered()
             removeFaceEdges(f);
             delete f;
         }
-        ////printf("Made it here1\n");
+        //////printf("Made it here1\n");
         
         if(!abTemp.significant &&
            !bcTemp.significant &&
@@ -756,7 +782,7 @@ void Mesh::SubdivisionAltered()
            !daTemp.significant &&
            !midTemp.significant)
         {
-            //printf("This subdivided section is nearly useless");
+            ////printf("This subdivided section is nearly useless");
             //addSubdividedQuad(a, b, c, d, material);
             //continue;
         }
@@ -778,7 +804,7 @@ void Mesh::SubdivisionAltered()
         assert (getEdge(da,a) != NULL);
     }//*/
     
-    //printf("\n");
+    ////printf("\n");
 }
 
 //this is called when 'D' is pressed
@@ -840,50 +866,67 @@ Triangle* Mesh::getOppositeTriangle(Triangle* currentTri, Vertex* a, Vertex* b)
 {
     if (getEdge(a, b) == NULL)
     {
-        //printf("\tEdge a-b is NULL, switch it\n");
+        printf("\tEdge %d-%d is NULL, switch it\n", a->getIndex(), b->getIndex());
         Vertex * temp = a;
         a = b;
         b = temp;
         if (getEdge(a, b) == NULL)
         {
-            //printf("\tCan't find edge between these two points... that's a problem.\n");
+            printf("\tCan't find edge between these two points... that's a problem.\n");
             return NULL;
         }
     }
-
-    if (getEdge(a, b)->getTriangle() == currentTri) //if the a-b edge is on this side, set the mate to the opposite triangle
+    Edge* currEdge = getEdge(a, b);
+    Edge* oppositeEdge = getEdge(b, a);
+    
+    //I was having some issues with edges not establishing opposites
+    if(oppositeEdge != NULL && currEdge != NULL)
     {
-        //printf("Edge a-b is the current triangle\n");
-        //set this new triangles mate
-        if (getEdge(a, b)->getOpposite() == NULL)
+        if (currEdge->getOpposite() == NULL)
         {
-            //printf("\tOpposite Edge is NULL\n");
+            currEdge->setOpposite(oppositeEdge);
+        }
+        if (oppositeEdge->getOpposite() == NULL)
+        {
+            oppositeEdge->setOpposite(currEdge);
+        }
+    }
+
+    if (currEdge->getTriangle() == currentTri) //if the a-b edge is on this side, set the mate to the opposite triangle (the b-a side)
+    {
+        printf("1: Edge %d-%d is the current triangle\n", a->getIndex(), b->getIndex());
+        
+        //set this new triangles mate
+        if (currEdge->getOpposite() == NULL)
+        {
+            printf("\tOpposite Edge is NULL\n");
             return NULL;
         }
         else
         {
-            //printf("\tOpposite Edge's triangle is %d\n", getEdge(a,b)->getOpposite()->getTriangle()->getID());
-            currentTri->setMateEdge(getEdge(a, b));
-            getEdge(a, b)->getOpposite()->getTriangle()->setMateEdge(getEdge(a, b)->getOpposite());
-            return getEdge(a, b)->getOpposite()->getTriangle();
+            //assert(oppositeEdge == NULL);
+            printf("\t%d-%d's triangle is %d\n", a->getIndex(), b->getIndex(), getEdge(a,b)->getOpposite()->getTriangle()->getID());
+            //currentTri->setMateEdge(a, b);
+            //currEdge->getOpposite()->getTriangle()->setMateEdge(b, a);
+            return currEdge->getOpposite()->getTriangle();
             
         }
         
     }
     else //otherwise edge a-b is on the other side of this triangle, so just set mate to that triangle
     {
-        //printf("Edge a-b is the oppposite triangle\n");
-        if (getEdge(a, b) == NULL)
+        printf("2: Edge %d-%d is the oppposite triangle\n", b->getIndex(), a->getIndex());
+        if (currEdge == NULL)
         {
-            //printf("\tOpposite Edge is NULL\n");
+            printf("\tCurr Edge is NULL\n");
             return NULL;
         }
         else
         {
-            //printf("\tOpposite Edge's triangle is %d\n", getEdge(a,b)->getTriangle()->getID());
-            currentTri->setMateEdge(getEdge(a, b)->getOpposite());
-            getEdge(a, b)->getTriangle()->setMateEdge(getEdge(a, b));
-            return getEdge(a, b)->getTriangle();
+            printf("\t%d-%d's triangle is %d\n", b->getIndex(), a->getIndex(), getEdge(a,b)->getTriangle()->getID());
+            //currentTri->setMateEdge(currEdge->getOpposite());
+            //currEdge->getTriangle()->setMateEdge(a, b);
+            return currEdge->getTriangle();
         }
     }
 }
@@ -896,6 +939,7 @@ Triangle* Mesh::makeSubTriangle(Vertex *center, Vertex *a, Vertex* b, Triangle* 
     //set the generation of the new triangle
     subTri->setGeneration(tri->getGeneration()+1);
     subTri->setMate(mate);
+    //subTri->setMateEdge(mate->getMateVert1(), mate->getMateVert2());
     //set the opposite triangles mate to this new triangle if the old one was the parent triangle
     if (mate != NULL && mate->getMate() == tri)
     {
@@ -904,7 +948,25 @@ Triangle* Mesh::makeSubTriangle(Vertex *center, Vertex *a, Vertex* b, Triangle* 
     return subTri;
 }
 
-void Mesh::splitR3(Triangle* tri)
+Edge* Mesh::findMateEdge(Triangle* t1, Triangle* t2)
+{
+    std::vector<Vertex*> mateVerts;
+    for (int i = 0; i<3; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            if ((*t1)[i] == (*t2)[j])
+            {
+                mateVerts.push_back((*t1)[i]);
+                j = 3;//essentially just break;
+            }
+        }
+    }
+    assert(mateVerts.size() == 2);
+    return getEdge(mateVerts[0], mateVerts[1]);
+}
+
+bool Mesh::splitR3(Triangle* tri)
 {
     //root3 split
     /*
@@ -925,7 +987,7 @@ void Mesh::splitR3(Triangle* tri)
 
     if (tri->getGeneration()%2 == 0)
     {
-        //printf("Tri has Even generation\n");
+        ////printf("Tri has Even generation\n");
         //get the original verts we will be using
         Vertex* a = (*tri)[0];
         Vertex* b = (*tri)[1];
@@ -938,7 +1000,7 @@ void Mesh::splitR3(Triangle* tri)
         center->setTextureCoordinates((a->get_s() + b->get_s() + c->get_s())/3.0f,
                                      (a->get_t() + b->get_t() + c->get_t())/3.0f);
 
-        //printf("Verts Created\n");
+        ////printf("Verts Created\n");
 
         //first store some information on tri before deleting it
         //Material* mat = tri->getMaterial();
@@ -946,52 +1008,93 @@ void Mesh::splitR3(Triangle* tri)
         Triangle* s1Mate = getOppositeTriangle(tri, a, b); //gets the mate triangle for s1
         Triangle* s2Mate = getOppositeTriangle(tri, b, c); //gets the mate triangle for s2
         Triangle* s3Mate = getOppositeTriangle(tri, c, a); //gets the mate triangle for s3
-        //printf("Got the mates\n");
+        
+        printf("s1Mate: %p, s2Mate: %p, s3Mate: %p\n", s1Mate, s2Mate, s3Mate);
+        
+        ////printf("Got the mates\n");
 
         //need to delete the old triangle before making new ones, so the old edges don't
         //conflict with the new triangle edges
         removeTriEdges(tri);
-        //printf("Deleted Old Triangle edges\n");
+        ////printf("Deleted Old Triangle edges\n");
 
 
         //make the new 3 triangles, and set their material, generation, and mate
         Triangle* s1 = makeSubTriangle(center, a, b, s1Mate, tri);
         Triangle* s2 = makeSubTriangle(center, b, c, s2Mate, tri);
         Triangle* s3 = makeSubTriangle(center, c, a, s3Mate, tri);
-        //printf("Made the small triangles\n");
+        
+        
+        
+        ////printf("Made the small triangles\n");
 
-        //change the mates' mates before deleting tri
-        if(s1Mate != NULL && s1Mate->getMate() == tri)
+        //change the mates' mates before deleting tri and swap if the mates are the same generation
+        if(s1Mate != NULL && s1Mate->getMate() == s1)
         {
             s1Mate->setMate(s1);
+            //printf("s1Mate generation = %d == s1 generation = %d\n", s1Mate->getGeneration(), s1->getGeneration());
             if (s1Mate->getGeneration() == s1->getGeneration())
             {
-                swap(s1->getMateEdge());
+                swap(findMateEdge(s1, s1Mate));
+            }
+            
+            //check if s1Mate leads to a border, then so does s1
+            if (s1Mate->leadsToBorderTri())
+            {
+                s1->setLeadsToBorder(true);
             }
         }
-        if(s2Mate != NULL && s2Mate->getMate() == tri)
+        else
         {
+            s1->setLeadsToBorder(true);
+        }
+        if(s2Mate != NULL && s2Mate->getMate() == s2)
+        {
+            //printf("s2Mate generation = %d == s2 generation = %d\n", s2Mate->getGeneration(), s2->getGeneration());
             s2Mate->setMate(s2);
             if (s2Mate->getGeneration() == s2->getGeneration())
             {
-                swap(s2->getMateEdge());
+                swap(findMateEdge(s2, s2Mate));
+            }
+            
+            
+            //check if s2Mate leads to a border, then so does s2
+            if (s2Mate->leadsToBorderTri())
+            {
+                s2->setLeadsToBorder(true);
             }
         }
-        if(s3Mate != NULL && s3Mate->getMate() == tri)
+        else
         {
+            s2->setLeadsToBorder(true);
+        }
+        if(s3Mate != NULL && s3Mate->getMate() == s3)
+        {
+            //printf("s3Mate generation = %d == s3 generation = %d\n", s3Mate->getGeneration(), s3->getGeneration());
             s3Mate->setMate(s3);
             if (s3Mate->getGeneration() == s3->getGeneration())
             {
-                swap(s3->getMateEdge());
+                swap(findMateEdge(s3, s3Mate));
+            }
+            
+            
+            //check if s3Mate leads to a border, then so does s3
+            if (s3Mate->leadsToBorderTri())
+            {
+                s3->setLeadsToBorder(true);
             }
         }
-        //printf("Reassigned Mates\n");
+        else
+        {
+            s2->setLeadsToBorder(true);
+        }
+        ////printf("Reassigned Mates\n");
 
         //now we can delete tri (if it isn't from the original tris)
         //if(tri->getGeneration() > 0)
         //{
         removeSubdivideTriangle(tri);
-        //printf("Deleted Old Triangle\n");
+        ////printf("Deleted Old Triangle\n");
         //}
 
         /*
@@ -1001,29 +1104,30 @@ void Mesh::splitR3(Triangle* tri)
                 swap(T[i],T[i].mate[1])
          */
 
-
+        return true;
 
     }
     else
     {
         if (tri->getMate() == NULL)
         {
-            //printf("Invalid Triangle, try again.\n");
-            return;
+            ////printf("Invalid Triangle, try again.\n");
+            return false;
         }
         //split the mate if two generations behind
         if (tri->getMate()->getGeneration() == tri->getGeneration() - 2)
         {
-            //printf("Starting Recursion1\n");
+            ////printf("Starting Recursion1\n");
             splitR3(tri->getMate());
         }
         assert(tri->getMate() != NULL);
         //split the mate unconditionally (always resulting in an odd generation result)
-        //printf("Starting Recursion2\n");
+        ////printf("Starting Recursion2\n");
         splitR3(tri->getMate());
     }
-    //printf("Finished a split\n");
+    ////printf("Finished a split\n");
     //initialize VBOs (so that the screen updates)
+    return true;
 }
 
 
@@ -1034,61 +1138,70 @@ void Mesh::splitR3(Triangle* tri)
     T1.index++
     T2.index++
  */
-void Mesh::swap(Edge* sharedEdge)//, Vertex *a, Vertex *b, Vertex *c, Vertex *d) // turn ABC and ABD into ACD and BCD
+bool Mesh::swap(Edge* sharedEdge)//, Vertex *a, Vertex *b, Vertex *c, Vertex *d) // turn ABC and ABD into ACD and BCD
 {
-    printf("Trying to swap\n");
+    //printf("Trying to swap\n");
     Vertex *a = sharedEdge->getEndVertex();
     Vertex *b = sharedEdge->getStartVertex();
     Vertex *c = sharedEdge->getOpposite()->getNext()->getEndVertex();
     Vertex *d = sharedEdge->getNext()->getEndVertex();
-    
+    //printf("Made the verts\n");
     Material *material = sharedEdge->getTriangle()->getMaterial();//this would not work if this edge was a boundary between 2 materials, that boundry would move
-    
+    //printf("Got the material\n");
     //store triangles for deletion
     Triangle *t1 = sharedEdge->getOpposite()->getTriangle();
     Triangle *t2 = sharedEdge->getTriangle();
-    
+    //printf("Reconstructed triangles from edge\n");
     //collect mates
-    Triangle *t1Mate = t1->getMate();
-    Triangle *t2Mate = t2->getMate();
-
+    //Triangle *t1Mate = t1->getMate();
+    //Triangle *t2Mate = t2->getMate();
+    //printf("got the mates\n");
+    
     int newGen = t1->getGeneration() + 1;
     
     //remove old edges
     removeTriEdges(t1);
     removeTriEdges(t2);
-
+    //printf("Removed old edges\n");
     //delete t1;
     //delete t2;
     
     //delete triangles
     removeSubdivideTriangle(t1);
     removeSubdivideTriangle(t2);
-    
+    //printf("Removed old Triangles\n");
     t1 = NULL;
     t2 = NULL;
     
     //add triangles
     t1 = addTri(c, a, d, material, TRI_TYPE_SUBDIVIDED);
     t2 = addTri(d, b, c, material, TRI_TYPE_SUBDIVIDED);
+    
+    //printf("Added the new triangles\n");
 
     t1->setGeneration(newGen);
     t2->setGeneration(newGen);
     
-    //set the mates of the new edges to what they used to be usable in future iterations
+    //printf("Set the new generations\n");
     
-    if (t1Mate != NULL) //either has a or b as a vert shared with it's new destination
+    return true;
+    //set the mates of the new edges to what they used to be usable in future iterations
+
+    /*if (t1Mate != NULL) //either has a or b as a vert shared with it's new destination
     {
+        //printf("starting t1mate triangle mate assignment\n");
         Edge* t1Edge = t1Mate->getEdge();
         for (int i = 0; i < 3; i++)
         {
             if (t1Edge->getStartVertex() == a) //if a is in the mate's list of verts then it's part of t1
             {
+                //printf("t1mate is part of the new t1\n");
                 t1Mate->setMate(t1);
                 break;
             }
             else if (t1Edge->getStartVertex() == b) //if b is in the mate's list of verts then it's part of t2
             {
+                //printf("t1mate is part of the new t2\n");
                 t1Mate->setMate(t2);
                 break;
             }
@@ -1097,22 +1210,30 @@ void Mesh::swap(Edge* sharedEdge)//, Vertex *a, Vertex *b, Vertex *c, Vertex *d)
     }
     if (t2Mate != NULL) //either has a or b as a vert shared with it's new desination
     {
+        //printf("starting t2mate triangle mate assignment\n");
         Edge* t2Edge = t2Mate->getEdge();
-        for (int i = 0; i < 3; i++)
+        //printf("Assigned t2Edge\n");
+        assert(t2Edge->getStartVertex() != NULL);
+        assert(t2Edge->getEndVertex() != NULL);
+        for (int i = 0; i < 3; i++)          // *****************There is something wrong here****************
         {
+            //printf("CurrVert: %d, a: %d, b: %d\n", t2Edge->getStartVertex()->getIndex(), a->getIndex(), b->getIndex());
             if (t2Edge->getStartVertex() == a) //if a is in the mate's list of verts then it's part of t1
             {
+                //printf("t2mate is part of the new t1\n");
                 t2Mate->setMate(t1);
                 break;
             }
             else if (t2Edge->getStartVertex() == b) //if b is in the mate's list of verts then it's part of t2
             {
+                //printf("t2mate is part of the new t2\n");
                 t2Mate->setMate(t2);
                 break;
             }
             t2Edge = t2Edge->getNext();
         }
-    }
+        //printf("finished t2mate triangle mate assignment\n");
+    }*/
 }
 
 void Mesh::DisplacementSubdivisionTriangles() //this method can be changed to only update disp_subdivided_tris
@@ -1126,18 +1247,32 @@ void Mesh::DisplacementSubdivisionTriangles() //this method can be changed to on
     
     //subdivide the mesh based on current subdivided mesh
     Triangle *tri = subdivided_tris[args->getRand(0, subdivided_tris.size()-1)];
-    //printf("Chose triangle to split\n");
+    
+    //for now subdivide based on least subdivided area.
+    int smallestGen = INT_MAX;
+    for (int i = 0; i < subdivided_tris.size(); i++)
+    {
+        if (subdivided_tris[i]->getGeneration() < smallestGen && !subdivided_tris[i]->isBorderEdge() && !subdivided_tris[i]->leadsToBorderTri())
+        {
+            smallestGen = subdivided_tris[i]->getGeneration();
+            tri = subdivided_tris[i];
+        }
+    }
+    
+    
+    
+    ////printf("Chose triangle to split\n");
     splitR3(tri);
-    //printf("Split triangle\n");
+    ////printf("Split triangle\n");
     //make a mesh with height values adjusted for the displacement from this subdivided mesh
     
     //first clear out old displacement mesh
-    disp_subdivided_tris.clear();
+    clearTriangles(&disp_subdivided_tris);
 
     //now copy over the subdivided mesh for the displacement mesh
-    disp_subdivided_tris = subdivided_tris;
+    //disp_subdivided_tris = subdivided_tris;
 
-    //printf("Copied subdiv to disp vector\n");
+    ////printf("Copied subdiv to disp vector\n");
 
     std::map<int, bool> vertMoved;
 
@@ -1148,13 +1283,13 @@ void Mesh::DisplacementSubdivisionTriangles() //this method can be changed to on
     {
         //make a temp face
         Triangle *tri = subdivided_tris[i];
-        //printf("set tri\n");
+        ////printf("set tri\n");
         assert(tri != NULL);
-        //printf("Normal Value: (%f %f %f)\n", tri->computeNormal().x, tri->computeNormal().y, tri->computeNormal().z);
+        ////printf("Normal Value: (%f %f %f)\n", tri->computeNormal().x, tri->computeNormal().y, tri->computeNormal().z);
         glm::vec3 norm = glm::normalize(tri->computeNormal());
-        //printf("set norm\n");
+        ////printf("set norm\n");
         Material* m = tri->getMaterial();
-        //printf("Got some info on the current triangle\n");
+        ////printf("Got some info on the current triangle\n");
         
         //make some new verts for a new triangle
         Vertex *a = addVertex((*tri)[0]->get());
@@ -1169,7 +1304,7 @@ void Mesh::DisplacementSubdivisionTriangles() //this method can be changed to on
         c->setTextureCoordinates((*tri)[2]->get_s(), (*tri)[2]->get_t());
         float cDisp = glm::length(m->getDisplacementValue(c->get_s(), c->get_t()));
 
-        //printf("Made 3 new verts\n");
+        ////printf("Made 3 new verts\n");
 
         if (!vertMoved[a->getIndex()])
         {
@@ -1186,56 +1321,503 @@ void Mesh::DisplacementSubdivisionTriangles() //this method can be changed to on
             vertMoved[c->getIndex()] = true;
             c->set(c->get() + norm*cDisp); //*********************OPPORTUNITY TO CHANGE HOW MUCH DISPLACEMENT********
         }
-        //printf("Moved those verts\n");
+        ////printf("Moved those verts\n");
 
         addTri(a, b, c, m, TRI_TYPE_DISPLACEMENT);
-        //printf("Added the triangle to the displacement vector\n");
+        ////printf("Added the triangle to the displacement vector\n");
     }//*/
 
-    //printf("Finished the subdivision\n");
+    ////printf("Finished the subdivision\n");
     
 #endif
 }
 
 
-
-
-
-
 void Mesh::ConvertOriginalQuadsToTris()
 {
+    clearNeighbors();
+    clearTriangles(&subdivided_tris);
+    clearTriangles(&disp_subdivided_tris);
+    clearTriangles(&original_tris);
+    
     for (int i = 0; i < original_quads.size(); i++)
     {
         //if the face is not a light source
         if (glm::length(original_quads[i]->getMaterial()->getEmittedColor()) == 0)
         {
-            Vertex *a = addVertex((*original_quads[i])[0]->get());
-            Vertex *b = addVertex((*original_quads[i])[1]->get());
-            Vertex *c = addVertex((*original_quads[i])[2]->get());
-            Vertex *d = addVertex((*original_quads[i])[3]->get());
+            //printf("here1\n");
+            
+            //store the face verts
+            Vertex *quadVertA = (*original_quads[i])[0];
+            Vertex *quadVertB = (*original_quads[i])[1];
+            Vertex *quadVertC = (*original_quads[i])[2];
+            Vertex *quadVertD = (*original_quads[i])[3];
+            
+            //printf("here2\n");
+            
+            //make some verts for the new triangles
+            Vertex *a = NULL;// = addVertex(quadVertA->get());
+            Vertex *b = NULL;// = addVertex(quadVertB->get());
+            Vertex *c = NULL;// = addVertex(quadVertC->get());
+            Vertex *d = NULL;// = addVertex(quadVertD->get());
+            
+            //printf("here3\n");
+            
+            //if the a-b edge of the face has an opposite, check to see if a triangle edge already exists, if so the triangles a-b vertices are created already
+            if (getEdge(quadVertA, quadVertB)->getOpposite() != NULL && getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdge() != NULL)
+            {
+                printf("A-B Existed already\n");
+                if (a == NULL)
+                {
+                    a = getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdge()->getEndVertex();
+                }
+                if (b == NULL)
+                {
+                    b = getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdge()->getStartVertex();
+                }
+            }
+            //if the b-c edge of the face has an opposite, check to see if a triangle edge already exists, if so the triangles b-c vertices are created already
+            if (getEdge(quadVertB, quadVertC)->getOpposite() != NULL && getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdge() != NULL)
+            {
+                printf("B-C Existed already\n");
+                if (b == NULL)
+                {
+                    b = getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdge()->getEndVertex();
+                }
+                if (c == NULL)
+                {
+                    c = getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdge()->getStartVertex();
+                }
+            }
+            //if the c-d edge of the face has an opposite, check to see if a triangle edge already exists, if so the triangles c-d vertices are created already
+            if (getEdge(quadVertC, quadVertD)->getOpposite() != NULL && getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdge() != NULL)
+            {
+                printf("C-D Existed already\n");
+                if (c == NULL)
+                {
+                    c = getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdge()->getEndVertex();
+                }
+                if (d == NULL)
+                {
+                    d = getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdge()->getStartVertex();
+                }
+            }
+            //if the d-a edge of the face has an opposite, check to see if a triangle edge already exists, if so the triangles d-a vertices are created already
+            if (getEdge(quadVertD, quadVertA)->getOpposite() != NULL && getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdge() != NULL)
+            {
+                printf("D-A Existed already\n");
+                if (d == NULL)
+                {
+                    d = getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdge()->getEndVertex();
+                }
+                if (a == NULL)
+                {
+                    a = getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdge()->getStartVertex();
+                }
+            }
+            
+            //printf("here4\n");
+            //if a wasn't found above, make a new vert for it
+            if (a == NULL)
+            {
+                printf("A Hasn't Been Created Yet\n");
+                a = addVertex(quadVertA->get());
+            }
+            //if b wasn't found above, make a new vert for it
+            if (b == NULL)
+            {
+                printf("B Hasn't Been Created Yet\n");
+                b = addVertex(quadVertB->get());
+            }
+            //if c wasn't found above, make a new vert for it
+            if (c == NULL)
+            {
+                printf("C Hasn't Been Created Yet\n");
+                c = addVertex(quadVertC->get());
+            }
+            //if d wasn't found above, make a new vert for it
+            if (d == NULL)
+            {
+                printf("D Hasn't Been Created Yet\n");
+                d = addVertex(quadVertD->get());
+            }
 
+            //printf("here5\n");
             //make triangle 1 of the quad (abc)
             addTri(a, b, c, original_quads[i]->getMaterial(), TRI_TYPE_ORIGINAL);
             
             //make triangle 2 of the quad (acd)
             addTri(a, c, d, original_quads[i]->getMaterial(), TRI_TYPE_ORIGINAL);
+            
+            //printf("here6\n");
+            //set the triangleEdges of the quad's edges
+            getEdge(quadVertA, quadVertB)->setTriangleEdge(getEdge(a, b));
+            getEdge(quadVertB, quadVertC)->setTriangleEdge(getEdge(b, c));
+            getEdge(quadVertC, quadVertD)->setTriangleEdge(getEdge(c, d));
+            getEdge(quadVertD, quadVertA)->setTriangleEdge(getEdge(d, a));
+                
+            
 
+            //printf("here7\n");
             //Also add to subdiv_tri
-
-            Vertex *aS = addVertex((*original_quads[i])[0]->get());
-            Vertex *bS = addVertex((*original_quads[i])[1]->get());
-            Vertex *cS = addVertex((*original_quads[i])[2]->get());
-            Vertex *dS = addVertex((*original_quads[i])[3]->get());
-
+            Vertex *aS = NULL;// = addVertex(quadVertA->get());
+            Vertex *bS = NULL;// = addVertex(quadVertB->get());
+            Vertex *cS = NULL;// = addVertex(quadVertC->get());
+            Vertex *dS = NULL;// = addVertex(quadVertD->get());
+            
+            //printf("here8\n");
+            if (getEdge(quadVertA, quadVertB)->getOpposite() != NULL && getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdgeSubdiv() != NULL)
+            {
+                aS = getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdgeSubdiv()->getEndVertex();
+                bS = getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdgeSubdiv()->getStartVertex();
+            }
+            //printf("here8.1\n");
+            if (getEdge(quadVertB, quadVertC)->getOpposite() != NULL && getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdgeSubdiv() != NULL)
+            {
+                //printf("here8.11 %p\n", getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdgeSubdiv());
+                if (bS == NULL)
+                {
+                    bS = getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdgeSubdiv()->getEndVertex();
+                }
+                //printf("here8.12\n");
+                cS = getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdgeSubdiv()->getStartVertex();
+            }
+            //printf("here8.2\n");
+            if (getEdge(quadVertC, quadVertD)->getOpposite() != NULL && getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdgeSubdiv() != NULL)
+            {
+                if (cS == NULL)
+                {
+                    cS = getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdgeSubdiv()->getEndVertex();
+                }
+                dS = getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdgeSubdiv()->getStartVertex();
+            }
+            //printf("here8.3\n");
+            if (getEdge(quadVertD, quadVertA)->getOpposite() != NULL && getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdgeSubdiv() != NULL)
+            {
+                if (dS == NULL)
+                {
+                    dS = getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdgeSubdiv()->getEndVertex();
+                }
+                if (aS == NULL)
+                {
+                    aS = getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdgeSubdiv()->getStartVertex();
+                }
+            }
+            
+            //printf("here9\n");
+            if (aS == NULL)
+            {
+                aS = addVertex(quadVertA->get());
+            }
+            if (bS == NULL)
+            {
+                bS = addVertex(quadVertB->get());
+            }
+            if (cS == NULL)
+            {
+                cS = addVertex(quadVertC->get());
+            }
+            if (dS == NULL)
+            {
+                dS = addVertex(quadVertD->get());
+            }
+            
+            //printf("here10\n");
             //make triangle 1 of the quad (abc)
-            addTri(aS, bS, cS, original_quads[i]->getMaterial(), TRI_TYPE_SUBDIVIDED);
-
+            addTri(aS, bS, cS, subdivided_quads[i]->getMaterial(), TRI_TYPE_SUBDIVIDED);
+            
             //make triangle 2 of the quad (acd)
-            addTri(aS, cS, dS, original_quads[i]->getMaterial(), TRI_TYPE_SUBDIVIDED);
-
+            addTri(aS, cS, dS, subdivided_quads[i]->getMaterial(), TRI_TYPE_SUBDIVIDED);
+            
+            //printf("here11\n");
+            //set the triangleEdges of the quad's edges
+            getEdge(quadVertA, quadVertB)->setTriangleEdgeSubdiv(getEdge(aS, bS));
+            getEdge(quadVertB, quadVertC)->setTriangleEdgeSubdiv(getEdge(bS, cS));
+            getEdge(quadVertC, quadVertD)->setTriangleEdgeSubdiv(getEdge(cS, dS));
+            getEdge(quadVertD, quadVertA)->setTriangleEdgeSubdiv(getEdge(dS, aS));
         }
     }
+    
+    addAllNeighbors();
+    printNeighbors();
 
+    //initialize->setup->helper->
+}
+
+void Mesh::ConvertSubdividedQuadsToTris()// ********* Maybe make a recursive version of this that makes tris out of a quad, then tries to recurse on the quads around it
+{
+    clearTriangles(&subdivided_tris);
+    clearTriangles(&disp_subdivided_tris);
+    clearTriangles(&original_tris);
+    //subdivided_tris.clear();
+    //disp_subdivided_tris.clear();
+    
+    clearNeighbors();
+    for (int i = 0; i < subdivided_quads.size(); i++)
+    {
+        //if the face is not a light source
+        if (glm::length(subdivided_quads[i]->getMaterial()->getEmittedColor()) == 0)
+        {
+            //printf("_________________________\n");
+            //printf("SHere1\n");
+            Vertex *quadVertA = (*subdivided_quads[i])[0];
+            Vertex *quadVertB = (*subdivided_quads[i])[1];
+            Vertex *quadVertC = (*subdivided_quads[i])[2];
+            Vertex *quadVertD = (*subdivided_quads[i])[3];
+            
+            //printf("SHere2\n");
+            Vertex *a = NULL;// = addVertex(quadVertA->get());
+            Vertex *b = NULL;// = addVertex(quadVertB->get());
+            Vertex *c = NULL;// = addVertex(quadVertC->get());
+            Vertex *d = NULL;// = addVertex(quadVertD->get());
+            
+            //if the a-b edge of the face has an opposite, check to see if a triangle edge already exists, if so the triangles a-b vertices are created already
+            if (getEdge(quadVertA, quadVertB)->getOpposite() != NULL && getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdge() != NULL)
+            {
+                //printf("A-B Existed already\n");
+                if (a == NULL)
+                {
+                    a = getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdge()->getEndVertex();
+                }
+                if (b == NULL)
+                {
+                    b = getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdge()->getStartVertex();
+                }
+            }
+            //if the b-c edge of the face has an opposite, check to see if a triangle edge already exists, if so the triangles b-c vertices are created already
+            if (getEdge(quadVertB, quadVertC)->getOpposite() != NULL && getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdge() != NULL)
+            {
+                //printf("B-C Existed already\n");
+                if (b == NULL)
+                {
+                    b = getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdge()->getEndVertex();
+                }
+                if (c == NULL)
+                {
+                    c = getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdge()->getStartVertex();
+                }
+            }
+            //if the c-d edge of the face has an opposite, check to see if a triangle edge already exists, if so the triangles c-d vertices are created already
+            if (getEdge(quadVertC, quadVertD)->getOpposite() != NULL && getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdge() != NULL)
+            {
+                //printf("C-D Existed already\n");
+                if (c == NULL)
+                {
+                    c = getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdge()->getEndVertex();
+                }
+                if (d == NULL)
+                {
+                    d = getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdge()->getStartVertex();
+                }
+            }
+            //if the d-a edge of the face has an opposite, check to see if a triangle edge already exists, if so the triangles d-a vertices are created already
+            if (getEdge(quadVertD, quadVertA)->getOpposite() != NULL && getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdge() != NULL)
+            {
+                //printf("D-A Existed already\n");
+                if (d == NULL)
+                {
+                    d = getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdge()->getEndVertex();
+                }
+                if (a == NULL)
+                {
+                    a = getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdge()->getStartVertex();
+                }
+            }
+            
+            //printf("here4\n");
+            //if a wasn't found above, make a new vert for it
+            if (a == NULL)
+            {
+                //printf("A Hasn't Been Created Yet\n");
+                a = addVertex(quadVertA->get());
+            }
+            //if b wasn't found above, make a new vert for it
+            if (b == NULL)
+            {
+                //printf("B Hasn't Been Created Yet\n");
+                b = addVertex(quadVertB->get());
+            }
+            //if c wasn't found above, make a new vert for it
+            if (c == NULL)
+            {
+                //printf("C Hasn't Been Created Yet\n");
+                c = addVertex(quadVertC->get());
+            }
+            //if d wasn't found above, make a new vert for it
+            if (d == NULL)
+            {
+                //printf("D Hasn't Been Created Yet\n");
+                d = addVertex(quadVertD->get());
+            }
+            
+            //printf("SHere5\n");
+            //make triangle 1 of the quad (abc)
+            addTri(a, b, c, subdivided_quads[i]->getMaterial(), TRI_TYPE_ORIGINAL);
+            
+            //make triangle 2 of the quad (acd)
+            addTri(a, c, d, subdivided_quads[i]->getMaterial(), TRI_TYPE_ORIGINAL);
+            
+            //printf("SHere6\n");
+            //set the triangleEdges of the quad's edges
+            getEdge(quadVertA, quadVertB)->setTriangleEdge(getEdge(a, b));
+            getEdge(quadVertB, quadVertC)->setTriangleEdge(getEdge(b, c));
+            getEdge(quadVertC, quadVertD)->setTriangleEdge(getEdge(c, d));
+            getEdge(quadVertD, quadVertA)->setTriangleEdge(getEdge(d, a));
+            
+            //printf("SHere7\n");
+            //Also add to subdiv_tri
+            Vertex *aS = nullptr;// = NULL;// = addVertex(quadVertA->get());
+            Vertex *bS = nullptr;// = NULL;// = addVertex(quadVertB->get());
+            Vertex *cS = nullptr;// = NULL;// = addVertex(quadVertC->get());
+            Vertex *dS = nullptr;// = NULL;// = addVertex(quadVertD->get());
+            
+            //Edge * fe = subdivided_quads[i]->getEdge();
+            
+            //printf("SHere8\n");
+            if (getEdge(quadVertA, quadVertB)->getOpposite() != NULL && getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdgeSubdiv() != NULL)
+            {
+                //printf("As-Bs Existed already\n");
+                aS = getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdgeSubdiv()->getEndVertex();
+                bS = getEdge(quadVertA, quadVertB)->getOpposite()->getTriangleEdgeSubdiv()->getStartVertex();
+            }
+            //printf("SHere8.1\n");
+            if (getEdge(quadVertB, quadVertC)->getOpposite() != NULL && getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdgeSubdiv() != NULL)
+            {
+                //printf("Bs-Cs Existed already\n");
+                //printf("SHere8.11 %p\n", getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdgeSubdiv());
+                if (bS == NULL)
+                {
+                    bS = getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdgeSubdiv()->getEndVertex();
+                }
+                //printf("SHere8.12\n");
+                if (cS == NULL)
+                {
+                    cS = getEdge(quadVertB, quadVertC)->getOpposite()->getTriangleEdgeSubdiv()->getStartVertex();
+                }
+            }
+            //printf("SHere8.2\n");
+            if (getEdge(quadVertC, quadVertD)->getOpposite() != NULL && getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdgeSubdiv() != NULL)
+            {
+                //printf("Cs-Ds Existed already\n");
+                if (cS == NULL)
+                {
+                    cS = getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdgeSubdiv()->getEndVertex();
+                }
+                if (dS == NULL)
+                {
+                    dS = getEdge(quadVertC, quadVertD)->getOpposite()->getTriangleEdgeSubdiv()->getStartVertex();
+                }
+            }
+            //printf("SHere8.3\n");
+            if (getEdge(quadVertD, quadVertA)->getOpposite() != NULL && getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdgeSubdiv() != NULL)
+            {
+                //printf("Ds-As Existed already\n");
+                if (dS == NULL)
+                {
+                    dS = getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdgeSubdiv()->getEndVertex();
+                }
+                if (aS == NULL)
+                {
+                    aS = getEdge(quadVertD, quadVertA)->getOpposite()->getTriangleEdgeSubdiv()->getStartVertex();
+                }
+            }
+            
+            //printf("SHere9\n");
+            if (aS == NULL)
+            {
+                //printf("As Hasn't Been Created Yet\n");
+                aS = addVertex(quadVertA->get());
+            }
+            if (bS == NULL)
+            {
+                //printf("Bs Hasn't Been Created Yet\n");
+                bS = addVertex(quadVertB->get());
+            }
+            if (cS == NULL)
+            {
+                //printf("Cs Hasn't Been Created Yet\n");
+                cS = addVertex(quadVertC->get());
+            }
+            if (dS == NULL)
+            {
+                //printf("Ds Hasn't Been Created Yet\n");
+                dS = addVertex(quadVertD->get());
+            }
+            
+            assert(aS != NULL);
+            assert(bS != NULL);
+            assert(cS != NULL);
+            assert(dS != NULL);
+            
+            //printf("SHere10\n");
+            //make triangle 1 of the quad (abc)
+            addTri(aS, bS, cS, subdivided_quads[i]->getMaterial(), TRI_TYPE_SUBDIVIDED);
+            //printf("SHere10.5\n");
+            //make triangle 2 of the quad (acd)
+            addTri(aS, cS, dS, subdivided_quads[i]->getMaterial(), TRI_TYPE_SUBDIVIDED);
+            
+            //printf("SHere11\n");
+            //set the triangleEdges of the quad's edges
+            getEdge(quadVertA, quadVertB)->setTriangleEdgeSubdiv(getEdge(aS, bS));
+            //printf("SHere11.1\n");
+            getEdge(quadVertB, quadVertC)->setTriangleEdgeSubdiv(getEdge(bS, cS));
+            //printf("SHere11.2\n");
+            getEdge(quadVertC, quadVertD)->setTriangleEdgeSubdiv(getEdge(cS, dS));
+            //printf("SHere11.3\n");
+            getEdge(quadVertD, quadVertA)->setTriangleEdgeSubdiv(getEdge(dS, aS));
+            //printf("SHere11.4\n");
+            //printf("Finished converting quad %d/%d\n", i+1, (int)subdivided_quads.size());
+        }
+        else
+        {
+            //printf("Skipped quad %d/%d, it was a light.\n", i+1, (int)subdivided_quads.size());
+        }
+    }
+    
+    //printf("%d subdiv tris currently\n", (int)subdivided_tris.size());
+    //lets check that everything is in working order
+    for (int i = 0; i < subdivided_tris.size(); i++)
+    {
+        //printf("Triangle %d\n", subdivided_tris[i]->getSubdivIndex());
+        assert(subdivided_tris[i]->getEdge() != NULL);
+        Edge * e = subdivided_tris[i]->getEdge();
+        for (int j = 0; j<3; j++)
+        {
+            //printf("Checking edge %d of triangle %d\n",j+1, i+1);
+            //check edges
+            if (e->getOpposite() == NULL) //if the opposite edge is null, make sure an opposite edge doesn't actually exist
+            {
+                //printf("\tOpposite of Edge %d is null\n", j+1);
+                assert(getEdge(e->getEndVertex(), e->getStartVertex()) == NULL);
+            }
+            else //otherwise make sure the opposite edge has the same verts and such.
+            {
+                //printf("\tOpposite of Edge %d is not null\n", j+1);
+                //make sure this is the right edge for oppositeEdge()
+                assert(getEdge(e->getEndVertex(), e->getStartVertex()) == e->getOpposite());
+                //make sure it has a link back to the current edge
+                assert(e->getOpposite()->getOpposite() == e);
+                //make sure the verts are the same
+                assert(e->getOpposite()->getStartVertex() == e->getEndVertex());
+                assert(e->getOpposite()->getEndVertex() == e->getStartVertex());
+                
+            }
+            
+            //check next edge
+            assert(e->getNext() != NULL);
+            e = e->getNext();
+            
+            //check verts
+            assert((*subdivided_tris[i])[j] != NULL);
+        }
+    }
+    
+    
+    //printf("SHere11.45\n");
+    //addAllNeighbors();
+    //printf("SHere11.5\n");
+    //printNeighbors();
+    //printf("SHere12\n");
     //initialize->setup->helper->
 }
 
@@ -1374,27 +1956,34 @@ void Mesh::setupVBOs() //Radiosity setupVBOs copy pasta
     mesh_tri_verts.clear();
     mesh_tri_indices.clear();
     mesh_textured_tri_indices.clear();
-    ////printf("Here1\n");
+    ////////printf("here1\n");
 
     std::vector<Triangle*> trianglesToShow;
     if (disp_subdivided_tris.size() > 0)
     {
         trianglesToShow = disp_subdivided_tris;
     }
-    else
+    else if(subdivided_tris.size() > 0)
     {
         trianglesToShow = subdivided_tris;
     }
-
+    else
+    {
+        trianglesToShow = original_tris;
+    }
     
+    printf("Got the list of things to show\n"); // ****************************THE ISSUE IS IN HERE SOMEWHERE********************
     // initialize the data in each vector
     assert (trianglesToShow.size() > 0);
     for (int i = 0; i < trianglesToShow.size(); i++)
     {
+        printf("Me?.1\n");
         Triangle *triangle = trianglesToShow[i];
+        printf("Me?.25\n");
         Edge *e = triangle->getEdge();
+        printf("Me?.5\n");
         glm::vec3 normal = triangle->computeNormal();
-        
+        printf("Me?1\n");
         double avg_s = 0;
         double avg_t = 0;
         glm::vec3 avg_color(0,0,0);
@@ -1407,14 +1996,15 @@ void Mesh::setupVBOs() //Radiosity setupVBOs copy pasta
         //if (args->render_mode == RENDER_FORM_FACTORS && i == max_undistributed_patch) {
         //    wireframe_color = glm::vec4(1,0,0,1);
         //}
-        ////printf("Here1.5\n");
+        ////////printf("here1.5\n");
         // add the 3 corner vertices
         for (int j = 0; j < 3; j++)
         {
             glm::vec3 pos = ((*triangle)[j])->get();
             double s = (*triangle)[j]->get_s();
             double t = (*triangle)[j]->get_t();
-            ////printf("Here1.6\n");
+            printf("Me?2\n");
+            ////////printf("here1.6\n");
             //glm::vec3 color = setupHelperForColor(t,i,j);
             //color = glm::vec3(linear_to_srgb(color.r),
             //                  linear_to_srgb(color.g),
@@ -1429,19 +2019,20 @@ void Mesh::setupVBOs() //Radiosity setupVBOs copy pasta
             {
                 color = glm::vec3(.8, .8, .8);
             }
-            ////printf("Here1.65\n");
+            ////////printf("here1.65\n");
             avg_color += (1.0f/3.0f) * color;
-            ////printf("Here1.7\n");
+            ////////printf("here1.7\n");
             mesh_tri_verts.push_back(VBOPosNormalColor(pos,normal,
                                                        glm::vec4(color.r,color.g,color.b,1.0),
                                                        wireframe_color,
                                                        s,t));
-            ////printf("Here1.75\n");
+            printf("Me?3\n");
+            ////////printf("here1.75\n");
             avg_s += (1.0f/3.0f) * s;
             avg_t += (1.0f/3.0f) * t;
             e = e->getNext();
         }
-        ////printf("Here2\n");
+        ////////printf("here2\n");
         
         // the centroid (for wireframe rendering)
         glm::vec3 centroid = triangle->computeCentroid();
@@ -1449,7 +2040,8 @@ void Mesh::setupVBOs() //Radiosity setupVBOs copy pasta
                                                    glm::vec4(avg_color.r,avg_color.g,avg_color.b,1),
                                                    glm::vec4(1,1,1,1),
                                                    avg_s,avg_t));
-        ////printf("Here3\n");
+        printf("Me?4\n");
+        ////////printf("here3\n");
         
         if (triangle->getMaterial()->hasTextureMap()) {
             mesh_textured_tri_indices.push_back(VBOIndexedTri(start+0,start+1,start+3));
@@ -1460,29 +2052,34 @@ void Mesh::setupVBOs() //Radiosity setupVBOs copy pasta
             mesh_tri_indices.push_back(VBOIndexedTri(start+1,start+2,start+3));
             mesh_tri_indices.push_back(VBOIndexedTri(start+2,start+0,start+3));
         }
-        ////printf("Here4\n");
+        printf("Me?5\n");
+        ////////printf("here4\n");
     }
     //assert ((int)mesh_tri_verts.size() == num_tris*5); //should this be a 4?
     //assert ((int)mesh_tri_indices.size() + (int)mesh_textured_tri_indices.size() == num_tris*4); //should this be a 3?
     
+    printf("Me?5.1\n");
     // copy the data to each VBO
     glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO);
     glBufferData(GL_ARRAY_BUFFER,
                  sizeof(VBOPosNormalColor) * trianglesToShow.size() * 5, //should this be a 4?
                  &mesh_tri_verts[0],
                  GL_STATIC_DRAW);
-    ////printf("Here5\n");
+    printf("Me?5.25\n");
+    ////////printf("here5\n");
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                  sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
                  &mesh_tri_indices[0], GL_STATIC_DRAW);
-    ////printf("Here6\n");
+    printf("Me?5.75\n");
+    ////////printf("here6\n");
     if (mesh_textured_tri_indices.size() > 0) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_textured_tri_indices_VBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                      sizeof(VBOIndexedTri) * mesh_textured_tri_indices.size(),
                      &mesh_textured_tri_indices[0], GL_STATIC_DRAW);
-        ////printf("Here7\n");
+        printf("Me?6\n");
+        ////////printf("here7\n");
         
     }
     
@@ -1499,7 +2096,10 @@ void Mesh::setupVBOs() //Radiosity setupVBOs copy pasta
             num_textured_materials++;
         }
     }
+    printf("Me?7\n");
     assert (num_textured_materials <= 1);
+    
+    printf("Finished Setting up VBOs\n");
     
     HandleGLError("leave radiosity setupVBOs()");
 }
@@ -1604,6 +2204,8 @@ void CollectTrisWithVertex(Vertex *have, Triangle *tri, std::vector<Triangle*> &
         if (ec != NULL) CollectTrisWithVertex(have,ec->getTriangle(),tris);
     }
 }
+
+
 
 
 
@@ -1749,7 +2351,7 @@ void Mesh::setupVBOs()
  
  //int i = 0;
  // write the vertex & triangle data
- //printf("NumTriangles: %d\n", (int)triangles.size());
+ ////printf("NumTriangles: %d\n", (int)triangles.size());
  for (triangleshashtype::iterator iter = triangles.begin();
  iter != triangles.end(); iter++)
  {

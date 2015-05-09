@@ -32,13 +32,25 @@ Vertex* Triangle::getVert(int v)
 glm::vec3 Triangle::computeNormal() const
 {
     // note: this face might be non-planar, so average the two triangle normals
+    //printf("Problem?1\n");
+    assert(this->getEdge() != NULL);
+    //printf("Problem?1.25\n");
+    assert(this->getEdge()->getNext() != NULL);
+    //printf("Problem?1.5\n");
+    assert(this->getEdge()->getNext()->getNext() != NULL);
+    //printf("Problem?1.75\n");
+    
     glm::vec3 a = (*this)[0]->get();
+    //printf("Problem?2\n");
     glm::vec3 b = (*this)[1]->get();
+    //printf("Problem?3\n");
     glm::vec3 c = (*this)[2]->get();
+    //printf("Problem?4\n");
     //printf("Set the position vectors to compute normal\n");
     glm::vec3 v12 = b - a;
     glm::vec3 v23 = c - b;
     //printf("Did some math\n");
+    //printf("Problem?5\n");
     glm::vec3 normal = glm::cross(v12,v23);
     //std::cout << "\t\t\tFaceNormal: " << normal.x << ", " << normal.y << ", " << normal.z << "\n";
     normal = glm::normalize(normal);
@@ -63,6 +75,13 @@ float Triangle::getArea()
     // A = 1/2 |AB||AC|sinθ
     return .5f * glm::length(ab)*glm::length(ac)*sin(angle);
 }
+
+/*void Triangle::setVertNull(int i)
+{
+    if (i==0) edge->setStartVertex(NULL);
+    if (i==1) edge->getNext()->setStartVertex(NULL);
+    if (i==2) edge->getNext()->getNext()->setStartVertex(NULL);
+}*/
 
 
 /*glm::vec3 ComputeNormal(const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3) {

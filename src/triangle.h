@@ -31,7 +31,10 @@ public:
         material = NULL;
         generation = 0;
         mate = NULL;
-        mateEdge = NULL;
+        leadsToBorder = false;
+        //mateEdge = NULL;
+        //mateVert1 = NULL;
+        //mateVert2 = NULL;
     }//*/
     Triangle(Material *m)
     {
@@ -41,7 +44,10 @@ public:
         material = m;
         generation = 0;
         mate = NULL;
-        mateEdge = NULL;
+        leadsToBorder = false;
+        //mateEdge = NULL;
+        //mateVert1 = NULL;
+        //mateVert2 = NULL;
     }//*/
 
     // =========
@@ -107,15 +113,39 @@ public:
     {
         mate = sMate;
     }
+    
+    bool isBorderEdge()
+    {
+        return (mate == NULL && generation%2 == 1);
+    }
+    bool leadsToBorderTri()
+    {
+        if (isBorderEdge()){ leadsToBorder = true;}
+        return leadsToBorder;
+    }
+    void setLeadsToBorder(bool b)
+    {
+        leadsToBorder = b;
+    }
+    
+    //void setVertNull(int i);
+    
+    
 
-    Edge* getMateEdge()
+    /*Vertex* getMateVert1()
     {
-        return mateEdge;
+        return mateVert1;
     }
-    void setMateEdge(Edge* me)
+    Vertex* getMateVert2()
     {
-        mateEdge = me;
+        return mateVert2;
     }
+    
+    void setMateEdge(Vertex* a, Vertex* b)
+    {
+        mateVert1 = a;
+        mateVert2 = b;
+    }*/
     
     float getArea();
     glm::vec3 computeNormal() const;
@@ -140,7 +170,9 @@ protected:
     int generation;
     Triangle* mate;
     int subdivIndex;
-    Edge *mateEdge;
+    bool leadsToBorder;
+    //Vertex* mateVert1;
+    //Vertex* mateVert2;
     
     // triangles are indexed starting at 0
     static int next_triangle_id;

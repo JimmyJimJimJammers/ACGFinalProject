@@ -25,18 +25,35 @@ public:
   // =========
   // ACCESSORS
   Vertex* getStartVertex() const { assert (start_vertex != NULL); return start_vertex; }
-  Vertex* getEndVertex() const { assert (end_vertex != NULL); return end_vertex; }
+  Vertex* getEndVertex() const
+  {
+      //printf("SHERE8.111\n");
+      assert (end_vertex != NULL);
+      //printf("SHERE8.112\n");
+      return end_vertex;
+  }
   Edge* getNext() const { assert (next != NULL); return next; }
   Face* getFace() const { assert (face != NULL); return face; }
     Triangle* getTriangle() const { assert (triangle != NULL); return triangle; }//NEW*****
-  Edge* getOpposite() const {
+  Edge* getOpposite() const
+  {
     // warning!  the opposite edge might be NULL!
-    return opposite; }
+    return opposite;
+  }
   float Length() const;
+    Edge* getTriangleEdge()
+    {
+        return triangleEdge;
+    }
+    Edge* getTriangleEdgeSubdiv()
+    {
+        return triangleEdgeSubdiv;
+    }
 
   // =========
   // MODIFIERS
-  void setOpposite(Edge *e) {
+  void setOpposite(Edge *e)
+  {
     assert (opposite == NULL); 
     assert (e != NULL);
     assert (e->opposite == NULL);
@@ -55,6 +72,23 @@ public:
     assert (face == e->face);
     next = e;
   }
+    void setTriangleEdge(Edge *e)
+    {
+        triangleEdge = e;
+    }
+    void setTriangleEdgeSubdiv(Edge *e)
+    {
+        triangleEdgeSubdiv = e;
+    }
+    
+    void setStartVertex(Vertex* start)
+    {
+        start_vertex = start;
+    }
+    void setEndVertex(Vertex* end)
+    {
+        end_vertex = end;
+    }
 
 private:
 
@@ -69,6 +103,8 @@ private:
   Vertex *start_vertex;
   Vertex *end_vertex;
     Triangle *triangle;//NEW**********
+    Edge *triangleEdge;//used for converting quads to tris, and seeing if verts have already been created
+    Edge *triangleEdgeSubdiv;//used for converting quads to tris, and seeing if verts have already been created
   Face *face;
   Edge *opposite;
   Edge *next;
