@@ -32,6 +32,9 @@ public:
         generation = 0;
         mate = NULL;
         leadsToBorder = false;
+        subdivIndex = 0;
+        //centerDisp = 0;
+        
         //mateEdge = NULL;
         //mateVert1 = NULL;
         //mateVert2 = NULL;
@@ -45,6 +48,8 @@ public:
         generation = 0;
         mate = NULL;
         leadsToBorder = false;
+        subdivIndex = 0;
+        //centerDisp = 0;
         //mateEdge = NULL;
         //mateVert1 = NULL;
         //mateVert2 = NULL;
@@ -128,6 +133,9 @@ public:
         leadsToBorder = b;
     }
     
+    float getCenterDisp();
+    float getAvgDisp();
+    
     //void setVertNull(int i);
     
     
@@ -171,6 +179,7 @@ protected:
     Triangle* mate;
     int subdivIndex;
     bool leadsToBorder;
+    //float centerDisp;
     //Vertex* mateVert1;
     //Vertex* mateVert2;
     

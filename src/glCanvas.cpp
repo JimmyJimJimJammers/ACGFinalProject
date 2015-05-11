@@ -114,16 +114,23 @@ void GLCanvas::initialize(ArgParser *_args) {
   glfwSetCursorPosCallback(GLCanvas::window,GLCanvas::mousemotionCB);
   glfwSetMouseButtonCallback(GLCanvas::window,GLCanvas::mousebuttonCB);
   glfwSetKeyCallback(GLCanvas::window,GLCanvas::keyboardCB);
-
+    printf("GLCanvas: Dont getting keuboard stuff\n");
+    
   programID = LoadShaders( args->path+"/render.vertexshader",
                            args->path+"/render.fragmentshader" );
 
+    printf("GLCanvas: About to load mesh\n");
   // Load mesh
   Load();
+    printf("GLCanvas: About to initialize VBOs\n");
   GLCanvas::initializeVBOs();
+    printf("GLCanvas: About to setup VBOs\n");
   GLCanvas::setupVBOs();
+    printf("GLCanvas: Finished setting up initial VBOs\n");
   camera->glPlaceCamera(); 
 
+    printf("Finished GLCanvas Initialize\n");
+    
   HandleGLError("finished glcanvas initialize");
 }
 
@@ -336,7 +343,8 @@ void GLCanvas::mousemotionCB(GLFWwindow *window, double x, double y) {
 // Callback function for keyboard events
 // ========================================================
 
-void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
   // store the modifier keys
   shiftKeyPressed = (GLFW_MOD_SHIFT & mods);
   controlKeyPressed = (GLFW_MOD_CONTROL & mods);
@@ -408,16 +416,23 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break; }
     case 'd':  case 'D':
     {
+        /*if (args->dispCriteria)
+        {
+            printf("Max disp discrepency: %f\n", mesh->getMaxAvgDisp());
+        }*/
         //radiosity->Cleanup();
         printf("Num disp triangles before: %d \n", mesh->numDispTriangles());
+        //printf("Num heap triangles before: %d \n", mesh->numHeapTriangles());
+        mesh->printSTs();
         mesh->DisplacementSubdivisionTriangles();//mesh->DisplacementSubdivision(); //radiosity->getMesh()->DisplacementSubdivision();
         printf("Num disp triangles after: %d \n", mesh->numDispTriangles());
+        //printf("Num heap triangles after: %d \n", mesh->numHeapTriangles());
+        mesh->printSTs();
         //radiosity->Reset();
         //radiosity->setupVBOs();
         printf("_____________________________________________\n");
         break;
     }
-    
       // RADIOSITY STUFF
     case ' ': 
       // a single step of radiosity
@@ -425,12 +440,15 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       //radiosity->setupVBOs();
       break;
     case 'a': case 'A':
+            //Subdivide %10 more detail
+            mesh->TriSubMany();
+            
       // animate radiosity solution
-      args->radiosity_animation = !args->radiosity_animation;
+      /*args->radiosity_animation = !args->radiosity_animation;
       if (args->radiosity_animation) 
         printf ("radiosity animation started, press 'A' to stop\n");
       else
-        printf ("radiosity animation stopped, press 'A' to start\n");
+        printf ("radiosity animation stopped, press 'A' to start\n");*/
       break;
     case 's': case 'S':
       // subdivide the mesh for radiosity
@@ -493,7 +511,9 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       std::cout << "UNKNOWN KEYBOARD INPUT  '" << (char)key << "'" << std::endl;
     }
     setupVBOs();
+      //printf("GLCanvas done setting up VBOs\n");
   }
+    //printf("Done Getting Keyboard Input\n");
 }
 
 // trace a ray through pixel (i,j) of the image and return the color

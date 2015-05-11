@@ -160,23 +160,40 @@ public:
     void cleanupVBOs();
     void removeSubdivideTriangle(Triangle *t);
     Triangle* getOppositeTriangle(Triangle* currentTri, Vertex* a, Vertex* b);
-    void DisplacementSubdivisionTriangles();
+    bool DisplacementSubdivisionTriangles();
     Triangle* makeSubTriangle(Vertex *center, Vertex *a, Vertex* b, Triangle* mate, Triangle* tri);
-    bool splitR3(Triangle* tri);
+    bool splitR3(Triangle* tri, int depth);
     bool swap(Edge* sharedEdge);
     int numDispTriangles()
     {
-        //if (disp_subdivided_tris.size() > 0)
-        //{
-        //    return disp_subdivided_tris.size();
-        //}
-        //else
-        //{
-            return subdivided_tris.size();
-        //}
+        return subdivided_tris.size();
     }
+    /*int numHeapTriangles()
+    {
+        return subdivided_tris_heap.size();
+    }*/
     Edge* findMateEdge(Triangle* t1, Triangle* t2);
     void ConvertSubdividedQuadsToTris();
+    
+    void TriSubMany();
+    
+    /*float getMaxAvgDisp()
+    {
+        return subdivided_tris_heap[0]->getCenterDisp();
+    }*/
+    
+    void printSTs()
+    {
+        for (int i = 0; i < subdivided_tris.size(); i++)
+        {
+            printf("Tri %d\n", i);
+            for (int j = 0; j < 3; j++)
+            {
+                printf("\t%d: S: %f T: %f\n", j, (*subdivided_tris[i])[j]->get_s(), (*subdivided_tris[i])[j]->get_t());
+            }
+            
+        }
+    }
 
 private:
 
@@ -200,6 +217,24 @@ private:
     void SubdivisionAltered();
     void TriangleSimplification(int target_tri_count);
     void SubdivisionAlteredTriangles();
+    
+    struct compareDisp
+    {
+        bool operator()(Triangle* t1, Triangle* t2)
+        {
+            //printf("T1 center: %f, T2 center: %f, T1 avg: %f, T2 avg: %f\n", t1->getCenterDisp(), t2->getCenterDisp(), t1->getAvgDisp(), t2->getAvgDisp());
+            //return t1->getCenterDisp() < t2->getCenterDisp();
+            return t1->getAvgDisp() < t2->getAvgDisp();
+        }
+    };
+    
+    //when triangles other than the top of the heap are removed, for now, lets just redo the whole heap
+    /*void updateHeap()
+    {
+        subdivided_tris_heap.clear();
+        refillHeap();
+    }
+    void refillHeap();*/
     
     void addNeighbors(Triangle* tri)
     {
@@ -306,9 +341,11 @@ private:
   std::vector<Face*> subdivided_quads;
     std::vector<Face*> disp_subdivided_quads;
     
-    std::vector<Triangle*> original_tris;
+    //std::vector<Triangle*> original_tris;
     std::vector<Triangle*> subdivided_tris; // for tris
-    std::vector<Triangle*> disp_subdivided_tris; // for tris
+    std::vector<Triangle*> disp_subdivided_tris; // for tris after moved
+    
+    //std::vector<Triangle*> subdivided_tris_heap;
 
     //Stuff added from hw 1 (triangle related stuff)
     
@@ -327,6 +364,8 @@ private:
     //for tracking neighbors, I'm getting errors involving edges not seeing their opposites
     std::map<int, int> numNeighbors;
     
+    int trisDeleted;
+    int trisCreated;
     
     
     

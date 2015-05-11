@@ -83,10 +83,12 @@ public:
     
     void setStartVertex(Vertex* start)
     {
+        assert(start != NULL);
         start_vertex = start;
     }
     void setEndVertex(Vertex* end)
     {
+        assert(end != NULL);
         end_vertex = end;
     }
 

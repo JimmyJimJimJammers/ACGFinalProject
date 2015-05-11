@@ -7,6 +7,7 @@
 //
 
 #include "triangle.h"
+#include "math.h"
 
 
 
@@ -27,6 +28,97 @@ Vertex* Triangle::getVert(int v)
     if (v==2) return edge->getNext()->getNext()->getStartVertex();
     else
         return NULL;
+}
+
+float Triangle::getCenterDisp()
+{
+    //printf("In compare disp\n");
+    //the current distance from the original surface to the
+    float currDisp = 0;
+    float tempS = 0;
+    float tempT = 0;
+    
+    assert(material != NULL);
+    for (int i = 0; i < 3; i++)
+    {
+        assert((*this)[i] != NULL);
+        //printf("Looking at vertex %d\n", (i+1));
+        
+        
+        //printf("S: %f \n", (*this)[i]->get_s());
+        //printf("T: %f \n", (*this)[i]->get_t());
+        
+        //calculate the S and T for the center point
+        tempS += (1.0f/3.0f)*((*this)[i]->get_s());
+        //printf("Got S\n");
+        tempT += (1.0f/3.0f)*((*this)[i]->get_t());
+        //printf("Got T\n");
+        //printf("Disp for vert %d is %f\n", i, material->getDisplacementValue((*this)[i]->get_s(), (*this)[i]->get_t()).x);
+        
+        //calculate the interpolated disp (this is the value that the center point will be sitting at right now)
+        currDisp += (1.0f/3.0f)*material->getDisplacementValue((*this)[i]->get_s(), (*this)[i]->get_t()).x;
+    }
+    //printf("Got the disp values and the S and T values\n");
+    //the actual displacement value at the new point
+    float realDisp = material->getDisplacementValue(tempS, tempT).x; //compare the difference between the interpolated displacement and the actual dispacement
+    
+    //printf("Got the real disp value, time to return\n");
+    
+    //the actual value we want to base out choice off of is how much it will change from where it is now to where it would be
+    return fabs(realDisp - currDisp);
+}
+
+float Triangle::getAvgDisp()
+{
+    //printf("In compare disp\n");
+    //the current distance from the original surface to the
+    float currDisp = 0;
+    float tempS = 0;
+    float tempT = 0;
+    
+    assert(material != NULL);
+    for (int i = 0; i < 3; i++)
+    {
+        assert((*this)[i] != NULL);
+        //printf("Looking at vertex %d\n", (i+1));
+        
+        
+        //printf("S: %f \n", (*this)[i]->get_s());
+        //printf("T: %f \n", (*this)[i]->get_t());
+        
+        //calculate the S and T for the center point
+        tempS += (1.0f/3.0f)*((*this)[i]->get_s());
+        //printf("Got S\n");
+        tempT += (1.0f/3.0f)*((*this)[i]->get_t());
+        //printf("Got T\n");
+        //printf("Disp for vert %d is %f\n", i, material->getDisplacementValue((*this)[i]->get_s(), (*this)[i]->get_t()).x);
+        
+        //calculate the interpolated disp (this is the value that the center point will be sitting at right now)
+        currDisp += (1.0f/3.0f)*material->getDisplacementValue((*this)[i]->get_s(), (*this)[i]->get_t()).x;
+    }
+    //printf("Got the disp values and the S and T values\n");
+    //the actual displacement value at the new point
+    float realDisp = material->getDisplacementValue(tempS, tempT).x; //compare the difference between the interpolated displacement and the actual dispacement
+    
+    //lets also factor in the 3 points between the center point and the outer vertices
+    float caDisp = .5f*material->getDisplacementValue((*this)[0]->get_s(), (*this)[0]->get_t()).x;
+    caDisp += .5f*currDisp;
+    float caReal = material->getDisplacementValue((tempS+(*this)[0]->get_s())/2.0f, (tempT+(*this)[0]->get_t())/2.0f).x;
+    
+    float cbDisp = .5f*material->getDisplacementValue((*this)[1]->get_s(), (*this)[1]->get_t()).x;
+    cbDisp += .5f*currDisp;
+    float cbReal = material->getDisplacementValue((tempS+(*this)[1]->get_s())/2.0f, (tempT+(*this)[1]->get_t())/2.0f).x;
+    
+    float ccDisp = .5f*material->getDisplacementValue((*this)[2]->get_s(), (*this)[2]->get_t()).x;
+    ccDisp += .5f*currDisp;
+    float ccReal = material->getDisplacementValue((tempS+(*this)[2]->get_s())/2.0f, (tempT+(*this)[2]->get_t())/2.0f).x;
+    
+    
+    
+    //printf("Got the real disp value, time to return\n");
+    
+    //the actual value we want to base out choice off of is how much it will change from where it is now to where it would be
+    return .5f*fabs(realDisp - currDisp) + (1.0f/6.0f)*fabs(caReal - caDisp) + (1.0f/6.0f)*fabs(cbReal - cbDisp) + (1.0f/6.0f)*fabs(ccReal - ccDisp);
 }
 
 glm::vec3 Triangle::computeNormal() const

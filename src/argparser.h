@@ -80,6 +80,11 @@ public:
       } else if (std::string(argv[i]) == std::string("-num_disp_increments")) {
           i++; assert (i < argc);
           disp_increments = atoi(argv[i]);
+      } else if (std::string(argv[i]) == std::string("-disp")) {
+          dispCriteria = true;
+      } else if (std::string(argv[i]) == std::string("-subdiv_percent")) {
+          i++; assert (i < argc);
+          subPercent = atoi(argv[i]);
       } else if (std::string(argv[i]) == std::string("-sphere_rasterization")) {
 	i++; assert (i < argc); 
 	sphere_horiz = atoi(argv[i]);
@@ -185,6 +190,8 @@ public:
       
       //Displacement Parameters
       disp_increments = 1;
+      dispCriteria = false;
+      subPercent = 10;
 
     // uncomment for deterministic randomness
     // GLOBAL_RAND = MTRand(37);
@@ -232,6 +239,8 @@ public:
     
     //Displacement Subdivision Paramaters
     int disp_increments;
+    bool dispCriteria;
+    int subPercent;
 
 };
 
